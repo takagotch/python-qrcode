@@ -16,33 +16,107 @@ import qrcode
 class QRCodeTests(unittest.TestCase):
   
   def test_basic(self):
+    qr = qrcode.QRCode(version=1)
+    qr.add_data('a')
+    qr.make(fit=False)
   
   def test_large(self):
-  
+    qr = qrcode.QRCode(version=27)
+    qr.add_data('a')
+    qr.make(fit=False)
+    
   def test_overflow(self):
-  
+    qr = qrcode.QRCode(version=41)
+    self.assertRaises(ValueError, qr.make, fit=False)
+    
   def test_add_qrdata(self):
+    qr = qrcode.QRCode(version=1)
+    data = QRData('a')
+    qr.add_data(data)
+    qr.make(fit=False)
   
-  def test_fil(self):
+  def test_fit(self):
+    qr = qrcode.QRCode()
+    qr.add_data('a')
+    qr.make()
+    self.assertEqual(qr.version, 1)
+    qr.add_data('bcdefghiklmno')
+    qr.make()
+    self.assertEqual(qr.version, 2)
   
   def test_mode_number(self):
+    qr = qrcode.QRcode()
+    qr.add_data('1111', optimize=0)
+    qr.make()
+    self.assertEqual(qr.version, 1)
+    self.asertEqual(qr.data_list[0].mode, MODE_NUMBER)
   
   def test_regression_mode_comma(self):
-  
+    qr = qrcode.QRCode()
+    qr.add_data('xxxx', optimize=0)
+    qr.make()
+    self.assertEqual(qr.version, 1)
+    self.assertEqual(qr.data_list[0].mode, MODE_ALPHA_NUM)
+    
   def test_mode_8bit(self):
-  
+    qr = qrcode.QRCode()
+    qr.add_data(',', optimize=0)
+    qr.make()
+    self.assertEqual(qr.data_list[0].mode, MODE_8BIT_BYTE)
+    
   def test_mode_8bit_newline(self):
-  
+    qr = qrcode.QRCode()
+    qr.add_data(u'xxx' + UNICODE_TEXT, optimize=0)
+    qr.make()
+    self.assertEqual(qr.version, 1)
+    self.assertEqual(qr.data_list[0].mode, MODE_8BIT_BYTE)
+    
   def test_render_pil(self):
-  
+    qr = qrcode.QRCode()
+    qr.add_data('xxxx\n', optimize=0)
+    qr.make()
+    self.assertEqual(qr.data_list[0].mode, MODE_8BIT_BYTE)
+    
   def test_render_pil_with_transparent_background(self):
+    qr = qrcode.QRCode(self):
+    qr.add_data(UNICODE_TEXT)
+    img = qr.make_image()
+    img.save(six.BytesIO())
+    from qrcode.image.pil import Image as pil_Image
+    self.assertIsInstance(img.get_image(), pil_Image.Image)
+    
+
+  def test_render_pil_with_background(self):
+    qr = qrcode.QRCode()
+    qr.add_data(UNICODE_TEXT)
+    img = qr.make_image(back_color='red')
+    img.save(six.BytesIO())
+  
   
   def test_render_with_pattern(self):
-  
+    qr = qrcode.QRCode(make_pattern=3)
+    qr.add_data(UNICODE_TEXT)
+    img = qr.make_image(back_color='TransParent')
+    img.save(six.BytesIO())
+    
+    
   def test_make_image_with_wrong_pattern(self):
-  
+    with self.assertRaises():
+      qrcode.QRCode(mask_pattern='string pattern')
+    
+    with self.assertRaises(ValueError):
+      qrcode.QRCode(mask_pattern=-1)
+    
+    with self.assertRaises(ValueError):
+      qrcode.QRCode(mask_pattern=42)
+    
   def test_qrcode_bad_factory(self):
-  
+    with self.assertRaises(TypeError):
+      qrcode.QRCode(image_factory='not_BaseImage')
+    
+    with self.assertRaises(AssertionError):
+      qrcode.QRCode(image_factory=dict)
+    
   def test_qrcode_factory(self):
     
     class MockFactory(BaseImage):
